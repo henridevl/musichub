@@ -1,4 +1,4 @@
-# Application d'Entraînement Vocal
+# MusicHub - Application d'Entraînement Vocal
 
 Une application web moderne pour l'entraînement vocal, permettant aux utilisateurs d'enregistrer leur voix, de prendre des notes et de suivre leur progression.
 
