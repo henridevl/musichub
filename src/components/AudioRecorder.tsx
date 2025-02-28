@@ -2,6 +2,7 @@ import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect } f
 import { Mic, Square, Play, Pause } from 'lucide-react';
 import { Button } from './ui/button';
 import { toast } from 'react-hot-toast';
+import { checkBrowserCapabilities, getSupportedMimeTypes } from '../utils/browserCheck';
 
 interface AudioRecorderProps {
   onRecordingComplete: (blob: Blob, duration: number) => void;
@@ -16,25 +17,41 @@ export const AudioRecorder = forwardRef<any, AudioRecorderProps>(({
   const chunks = useRef<Blob[]>([]);
   const startTimeRef = useRef<number>(0);
 
+  useEffect(() => {
+    // Vérifier les capacités du navigateur au chargement
+    const capabilities = checkBrowserCapabilities();
+    getSupportedMimeTypes();
+  }, []);
+
   const startRecording = async () => {
     try {
+      console.log('Démarrage de l\'enregistrement...');
       chunks.current = [];
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log('Flux audio obtenu:', stream);
       const recorder = new MediaRecorder(stream);
+      console.log('MediaRecorder créé avec le type MIME:', recorder.mimeType);
       
       recorder.ondataavailable = (e) => {
+        console.log('Données audio disponibles:', e.data.size, 'bytes');
         if (e.data.size > 0) {
           chunks.current.push(e.data);
         }
       };
 
       recorder.onstop = () => {
+        console.log('Enregistrement terminé');
         const blob = new Blob(chunks.current, { type: 'audio/webm' });
+        console.log('Blob audio créé:', blob.size, 'bytes');
         const duration = (Date.now() - startTimeRef.current) / 1000; // Convertir en secondes
         onRecordingComplete(blob, duration);
         
         // Arrêter tous les tracks du stream
         stream.getTracks().forEach(track => track.stop());
+      };
+
+      recorder.onerror = (event) => {
+        console.error('Erreur MediaRecorder:', event);
       };
 
       startTimeRef.current = Date.now();
